@@ -1,53 +1,66 @@
-def solve_bugged_sort(t, test_cases):
+def bugged_sort(t, test_cases):
+    from collections import defaultdict, deque
+
     results = []
 
     for n, a, b in test_cases:
-        # Create a union-find structure
-        parent = list(range(2 * n + 1))
-        
-        def find(x):
-            if parent[x] != x:
-                parent[x] = find(parent[x])
-            return parent[x]
-        
-        def union(x, y):
-            px, py = find(x), find(y)
-            if px != py:
-                parent[px] = py
-
-        # Connect a[i] and b[i] in the union-find structure
+        # Create adjacency list for swaps
+        adjacency = defaultdict(list)
         for i in range(n):
-            union(a[i], b[i])
+            adjacency[a[i]].append(b[i])
+            adjacency[b[i]].append(a[i])
 
-        # Group elements by their root
-        components = {}
-        for x in a + b:
-            root = find(x)
-            if root not in components:
-                components[root] = []
-            components[root].append(x)
+        # Visited set to mark elements we've processed
+        visited = set()
 
-        # Check if each component can be sorted
-        valid = True
-        for component in components.values():
-            component.sort()
-            if component != sorted(component):
-                valid = False
-                break
+        def bfs(start):
+            queue = deque([start])
+            component = []
+            while queue:
+                current = queue.popleft()
+                if current not in visited:
+                    visited.add(current)
+                    component.append(current)
+                    queue.extend(neighbor for neighbor in adjacency[current] if neighbor not in visited)
+            return component
 
-        results.append("YES" if valid else "NO")
-    
+        # Check all connected components
+        possible = True
+        for x in range(1, 2 * n + 1):
+            if x not in visited:
+                component = bfs(x)
+                if not is_sortable(component, n):
+                    possible = False
+                    break
+
+        results.append("YES" if possible else "NO")
+
     return results
 
-# Input handling
-t = int(input())
-test_cases = []
-for _ in range(t):
-    n = int(input())
-    a = list(map(int, input().split()))
-    b = list(map(int, input().split()))
-    test_cases.append((n, a, b))
+def is_sortable(component, n):
+    """ Check if the component can be split into two sorted parts. """
+    component.sort()
+    # Check if we can split into two halves that can be sorted separately
+    return all(1 <= x <= 2 * n for x in component)
 
-# Solve and output results
-results = solve_bugged_sort(t, test_cases)
-print("\n".join(results))
+# Input Handling
+if __name__ == "__main__":
+    import sys
+    input = sys.stdin.read
+    data = input().split()
+
+    t = int(data[0])
+    index = 1
+    test_cases = []
+
+    for _ in range(t):
+        n = int(data[index])
+        index += 1
+        a = list(map(int, data[index:index + n]))
+        index += n
+        b = list(map(int, data[index:index + n]))
+        index += n
+        test_cases.append((n, a, b))
+
+    results = bugged_sort(t, test_cases)
+    sys.stdout.write("\n".join(results) + "\n")

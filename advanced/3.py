@@ -1,47 +1,23 @@
-def find_interesting_subsequence(T, test_cases):
-    results = []
+def lis_possible(n, k, arr):
+    from bisect import bisect_left
 
-    for n, k, a in test_cases:
-        # We take the first K elements (indices) from the sorted array
-        indices = sorted(range(n), key=lambda x: a[x])[:k]
-        indices.sort()  # Sort the indices to maintain subsequence order
+    def lis_length(sequence):
+        lis = []
+        for x in sequence:
+            pos = bisect_left(lis, x)
+            if pos == len(lis):
+                lis.append(x)
+            else:
+                lis[pos] = x
+        return len(lis)
 
-        # Verify the longest increasing subsequence condition
-        subsequence = [a[i] for i in indices]
-        lis_length = 1
-        current_max = subsequence[0]
-        for value in subsequence[1:]:
-            if value > current_max:
-                lis_length += 1
-                current_max = value
+    lis = lis_length(arr)
+    if lis + k - n <= (k + 1) // 2:
+        return "YES"
+    return "NO"
 
-        if lis_length <= (k + 1) // 2:
-            results.append(("YES", [i + 1 for i in indices]))
-        else:
-            results.append(("NO", []))
 
-    return results
-
-# Input
-import sys
-input = sys.stdin.read
-data = input().splitlines()
-
-t = int(data[0])
-test_cases = []
-index = 1
-
-for _ in range(t):
-    n, k = map(int, data[index].split())
-    a = list(map(int, data[index + 1].split()))
-    test_cases.append((n, k, a))
-    index += 2
-
-# Output
-results = find_interesting_subsequence(t, test_cases)
-for result in results:
-    if result[0] == "YES":
-        print("YES")
-        print(" ".join(map(str, result[1])))
-    else:
-        print("NO")
+if __name__ == "__main__":
+    n, k = map(int, input().split())
+    arr = list(map(int, input().split()))
+    print(lis_possible(n, k, arr))
